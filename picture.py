@@ -7,6 +7,7 @@ class Picture:
         original_width, original_height = self.image.get_size()
         self.image = pygame.transform.scale(self.image, (original_width // image_sizing, original_height // image_sizing))
         self.pos = pygame.Vector2(start_x, start_y)
+        self.relative_position=0
 
     def update(self, dt, screen_width, speed, direction):
         if direction=="l":

@@ -11,7 +11,7 @@ class Player(Picture):
         self.jump_frame_counter = 0
         self.isOutOfScreen1=False
         self.isOutOfScreen2=False
-        self.relative_position=0
+
 
     def update(self, dt, screen_height,ground_level):
         
