@@ -12,27 +12,37 @@ def play(filename):
 def stop_music():
     pygame.mixer.music.stop()
 
-def save_score(score, player_name,position):
-    with open("scores.csv", "a", newline="") as csvfile:
+def save_data(jump_counter, player_name,position):
+    with open("csv_files/data.csv", "a", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow([player_name, score,position])
+        writer.writerow([player_name, jump_counter,position])
 
-def sort_score():
-    with open("scores.csv", mode="r") as file:
+def sort_data():
+    with open("csv_files/data.csv", mode="r") as file:
         reader = csv.reader(file)
         data = list(reader)  
     data_sorted = sorted(data, key=lambda x: int(x[2]), reverse=True)
 
-    with open("sorted_score.csv", mode="w", newline="") as file:
+    with open("csv_files/sorted_data.csv", mode="w", newline="") as file:
         writer = csv.writer(file)
         writer.writerows(data_sorted)
 
-
+def leaderboard_data(filename):
+    data = []
+    with open(filename, mode='r', newline='') as file:
+        reader = csv.reader(file)
+        for i, row in enumerate(reader):
+            if i < 5:  
+                data.append(row)
+            else:
+                break 
+    return data
 
 # Initialisation of pygame
 pygame.init()
 
 # Variables & constants
+leaderboard=[]
 ground_level = 120
 screen_height = 720
 screen_width = 1280
@@ -51,7 +61,7 @@ paused=False
 menu=False
 running = True
 dt = 0
-score = 0
+jump_counter = 0
 
 # picture loading
 earth = Picture("graphics/earth.png", 2, 300, -800)
@@ -81,7 +91,7 @@ while running:
         if event.type == pygame.KEYDOWN and open_event_active:
             if event.key == pygame.K_SPACE:
                 alien.jump()
-                score += 1
+                jump_counter += 1
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_m:
                 if not menu:
@@ -98,8 +108,17 @@ while running:
     if menu:
         screen.fill((0,0,0))
         font = pygame.font.Font(None, 200)
-        menu_text = font.render(f"Menu", True, (255, 255, 255))
+        menu_text = font.render(f"Leaderboard", True, (255, 255, 255))
         screen.blit(menu_text, (430, 100))
+        leaderboard=leaderboard_data("csv_files/sorted_data.csv")
+        for i, item in enumerate(leaderboard):
+            print(i, item)
+            font = pygame.font.Font(None, 50)
+            u=font.render(f'Name: {item[0]}  Jump Counter: {item[1]} Position: {item[2]}', True, (255, 255, 255))
+            screen.blit(u, (100, 250+50*i))
+
+        
+
         pygame.display.flip()
         print(f"menu",alien.relative_position)
         continue
@@ -125,7 +144,7 @@ while running:
     screen.fill((0, 0, 0))
 
     # Mises à jour des objets et des positions
-    if score > 7:
+    if jump_counter > 7:
         earth.update(dt, screen_width, 10, "d")
         spaceship.update(dt, screen_width, 70, "d")
         spaceship2.update(dt, screen_width, 70, "d")
@@ -134,24 +153,23 @@ while running:
         star1.update(dt, screen_width, 10, "d")
         star2.update(dt, screen_width, 10, "d")
         spaceship3_2.update(dt, screen_width, 2500 * dt, "u")
+    spaceship.update(dt, screen_width, 250, "r")
+    spaceship2.update(dt, screen_width, 20, "r")
+    spaceship.update(dt, screen_width, 250, "r")
+    spaceship2.update(dt, screen_width, 20, "r")
 
     # Dessiner les images
     earth.draw(screen)
     star1.draw(screen)
     star2.draw(screen)
     moon.draw(screen)
-    spaceship.update(dt, screen_width, 250, "r")
     spaceship.draw(screen)
-    spaceship2.update(dt, screen_width, 20, "r")
     spaceship2.draw(screen)
-
-    if score > 7:
+    if jump_counter > 7:
         spaceship3_2.draw(screen)
     else:
         spaceship3_1.draw(screen)
-    spaceship.update(dt, screen_width, 250, "r")
     spaceship.draw(screen)
-    spaceship2.update(dt, screen_width, 20, "r")
     spaceship2.draw(screen)
     
     # Mettre à jour et dessiner le joueur avec gravité
@@ -160,7 +178,7 @@ while running:
 
     # Affichage du score
     font = pygame.font.Font(None, 36)
-    score_text = font.render(f"Jump Counter: {score}", True, (255, 255, 255))
+    score_text = font.render(f"Jump Counter: {jump_counter}", True, (255, 255, 255))
     height_text = font.render(f"Your Height: {alien.rel_position(moon.position())-alien.relative_position}", True, (255, 255, 255))
     screen.blit(score_text, (10, 10))
     screen.blit(height_text, (10, 40))
@@ -188,8 +206,8 @@ while entering_name:
         b=random.randint(0, 255)
     screen.fill((r,g,b))
     font = pygame.font.Font(None, 48)
-    name_text = font.render(f'Here is your score: {alien.rel_position} /n Enter your name:', True, (0,0,0))
-    screen.blit(name_text, (screen_width // 2 - 200, screen_height // 2 - 50))
+    name_text = font.render(f'Enter your name:', True, (0,0,0))
+    screen.blit(name_text, (screen_width // 2 - 100, screen_height // 2 - 50))
     
     player_name_text = font.render(player_name, True, (0,0,0))
     screen.blit(player_name_text, (screen_width // 2 - 100, screen_height // 2))
@@ -202,8 +220,8 @@ while entering_name:
             break
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                save_score(score, player_name,alien.rel_position(moon.position())-alien.relative_position)
-                sort_score()
+                save_data(jump_counter, player_name,alien.rel_position(moon.position())-alien.relative_position)
+                sort_data()
                 entering_name = False
             elif event.key == pygame.K_BACKSPACE:
                 player_name = player_name[:-1]
